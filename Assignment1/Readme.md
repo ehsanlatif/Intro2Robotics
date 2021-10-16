@@ -73,7 +73,7 @@ This package contains two node files:
 A ROS node which subsribe to \laserscan topic and based on the observations it publiishes angular velocity to the gazebo node(simulator robot) so that it turns when confronting a wall.
 To run the node:
 
-`` $ rosrun husky_ehsan avoid_obstacle.py ``
+`` $ rosrun husky_grad_ehsan avoid_obstacle.py ``
 > *Note: This node is doing both motion and obstacle avoidance simultaneusly, so there is no need to run move_huky.py node for this.*
 
 **Thank You**
