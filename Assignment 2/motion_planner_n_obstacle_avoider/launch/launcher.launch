@@ -1,0 +1,3 @@
+<launch>
+  <node name="obsatacle_avoider" pkg="motion_planner_n_obstacle_avoider" type="obstacle_avoider.py" output="screen"/>
+</launch>
