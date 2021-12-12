@@ -1,0 +1,9 @@
+bool firstwp
+bool symboldetected
+uint8 symbolcolor
+float32 symbolpositionx
+float32 symbolpositiony
+---
+bool success
+float32 waypointx
+float32 waypointy
