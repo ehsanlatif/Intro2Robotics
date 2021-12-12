@@ -1,41 +1,65 @@
 # CSCI (ARTI) 4530/6530 Introduction to Robotics - Fall 2021
-## Assignment 2: Navigation of Robot to a Goal Location with Obstacles Avoidance
+## Final Exam - Project Test - Autonomous Exploration
 
 ### Author: Ehsan Latif
 
-#### Date: 18th October, 2021
+#### Date: 11th December, 2021
 
-This purpose of this assignment is to get Navigate a mobile robot to a goal location without hitting obstacles.
+This project is the implementation of the Gazebo simulations exhibiting autonomous exploration capability of
+a mobile robot (Clearpath’s Husky) fitted with a Kinect camera that provides RGB-D data and a LIDAR that
+provides 2D laser scan.
+The objective is to find (locate) and detect the color of the symbols throughout the building (THERE
+ARE TOTALLY FIVE SYMBOLS) and come back to the Origin (0,0) once exploration is completed. The
+task is simplified in a sense that there is a central server that already know where to look for symbols by
+providing waypoints.
 
 ### About Repository
-* It contains 2 ROS Packages:
-  1. motion_planner_n_obstalce_avoidance
+It contains 2 ROS Packages:
+1. final_project
+2. projectserver
 
-> Note: Before running the nodes Make Sure that you have already running gazeebo node by the command:
+> Note: Before running the nodes Make Sure that you have already running gazeebo and amcl navigation launchfiles by the command:
 > 
 > ``$ roslaunch husky_gazebo husky_playpen.launch ``
+> Instructions to install gazebo are available at [repository](https://github.com/husky/husky.git)
 > 
-> Instructions to install gazebo are available at (https://github.com/husky/husky.git)
+> ``$ roslaunch husky_navigation amcl_demo.launch ``
+> Instructions to install amcl are available at [ros resource](http://wiki.ros.org/amcl)
 
+#### final_project
+This package contains one node files:
+##### husky_mover.py_
+A ROS node which subscribed to following topics:
+1. */amcl_pose* topic to get robt position information of the robot for **localization**
+2. */map* to fetch the map produced by amcl for **Navigation**
+3. *realsense/color/image_raw* to retrieve live image feed from camera mounted on husky for **Object Detection**
 
+The Node published the */cmd_vel* topic for robot movement.
 
-#### motion_planner_n_obstalce_avoidance
-This package contains two node files:
-##### 1. motion_planner_without_obstacle.py_
-A ROS node which subscribes to /odometry/filtered topic to get position information of the robot and based on the current possition it decides about the motion of the robot. The node calculates the angular velocity such that it orient robot towards the goal location. This method based on the [feedback contoller](https://github.com/SMARTlab-Purdue/ros-tutorial-gazebo-simulation/wiki/Sec.-2:-Driving-the-Husky-robot-in-Gazebo)
+husky_mover also connected to the *wpserver.py* to request object position and provide response when arrived and detected the requried object.
 
+##### Path Planning (A* Path Planner)
+1. Once the node received the goal coordinated from the server it then required to plan a path for movement.
+2. We already have [OccupancyGrid](http://docs.ros.org/en/api/nav_msgs/html/msg/OccupancyGrid.html) which has infomration about map, object and obstacles.
+3. I have implemented A* algorithm with the help of this open source [repository](https://www.programcreek.com/python/?project_name=LetsPlayNow%2FTrajectoryPlanner#) to convert Grid points to world frame coordinates and vise versa, it also provided base for detetcing obstacle using grid information.
+4. The Path Planner class, receives start, destiantiona and grid, then  computed path using standard A* algorithm with the heuristic of euclidean distance from particular psition to destination.
+5. After path finding, the planner calls traveler node which plans motion (linear, angular velocity) based on the path coordinates.
+#### Object Detection
+1. Once the robot arrived at the required position, robot fetched image feed and detect the object with requried color using openCV Contouring library.
+2. If the robot able to detect the color accuratly, it then request *wpserver* to get next destination.
 
-To run the node:
+First run the projectserver package:
 
-`` $ rosrun motion_planner_n_obstacle_avoider motion_planner_without_obstacle.py ``
+`` $ rosrun projectserver wpserver.py ``
 
-##### 2. motion_planner_with_obstacle_avoidance.py_
-A ROS node which subscribe to \laserscan topic and based on the observations it divides the laser scan data into 12 regions as mentioned [here](https://github.com/Rad-hi/Obstacle-Avoidance-ROS). For each regions it calculates the distance and find probablity of having obstacle. If there is an obstalce detected in front of the robot, it then look for clearance region. To find the clearance region, it looks for all regions and finds the one with no or far-away obstacle. Further to reach towards the goal, it finds weight for each region based on the currennt orientation of the robot. The region with the less difference  of orientation to the goal position has the high weight. Later based on the cheapest and high weighted region, applied otimization and find the one which has clear ay and orients towards goal. Then applied angular velocity on the robot based on the optimal region. Then it publiishes linear and angular velocity to the gazebo node(simulator robot) so that it turns when confronting an obstacle to the appropriate direction.
-To run the node:
+Then run the final_project package:
 
-`` $ roslaunch motion_planner_n_obstacle_avoider launcher.launch ``
-> *Note: This launches the node to perform both motion planing and obstacle avoidance simultaneusly, so there is no need to run other node for this.*
+`` $ roslaunch final_project launcher.launch ``
 
+> *Note: This launches the node to perform both motion planing and object detection simultaneusly, so there is no need to run morethan one node.*
+
+### Video
+There is another folder named *video* which contains video demonstration of the project.
 
 **Thank You**
 ---
